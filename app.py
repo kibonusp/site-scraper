@@ -7,19 +7,18 @@ app = Flask(__name__,
             static_folder='static',
             template_folder='templates')
 db = PostgresAPI()
-scraper = Scraper("https://www.pokemon.com/br/pokedex/", ".pokedex-pokemon-pagination-title div", ".pokedex-pokemon-pagination-title div span", ".profile-images img", "p.version-x")
+scraper = Scraper("https://www.pokemon.com/br/pokedex/", ".pokedex-pokemon-pagination-title div span", ".profile-images img", "p.version-x")
 
 @app.route('/pokemon/<name>', methods=['GET'])
 def getPokemonPage(name):
+    name = name.capitalize()
     pokemon = db.get_pokemon_by_name(name)
     if (pokemon):
-        # make page from pokemon
-        return render_template('pokemon.html',)
+        return render_template('pokemon.html', pokemon=pokemon)
     else:
         scraped_pokemon = scraper.searchPokemon(name)
         db.insert_pokemon(scraped_pokemon)
-        db.commit_close()
-        # make page from scraped_pokemon
+        db.commit()
         return render_template('pokemon.html', pokemon=scraped_pokemon)
     
 @app.route('/', methods=['GET'])
